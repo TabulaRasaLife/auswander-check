@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auswander-Check | Tabula Rasa Life</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Montserrat', system-ui, sans-serif;
+      background: #f4f4f4;
+      color: #111;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px 16px 48px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.09);
+      max-width: 640px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    /* Header */
+    .hdr {
+      background: #ff5f1f;
+      padding: 28px 36px 24px;
+      color: #fff;
+    }
+    .hdr-brand {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      opacity: .8;
+      margin-bottom: 8px;
+    }
+    .hdr h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+    .hdr-sub {
+      font-size: .82rem;
+      opacity: .75;
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    /* Progress */
+    .progress-wrap {
+      padding: 20px 36px 0;
+    }
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: .75rem;
+      font-weight: 600;
+      color: #888;
+      margin-bottom: 8px;
+    }
+    .progress-track {
+      height: 5px;
+      background: #eee;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #ff5f1f;
+      border-radius: 3px;
+      transition: width .4s ease;
+    }
+
+    /* Body */
+    .body {
+      padding: 28px 36px 36px;
+    }
+
+    /* Phase label */
+    .phase-label {
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #ff5f1f;
+      margin-bottom: 10px;
+    }
+
+    /* Question */
+    .question {
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.45;
+      margin-bottom: 6px;
+      color: #111;
+    }
+    .question-hint {
+      font-size: .8rem;
+      color: #888;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+
+    /* Options */
+    .options { display: flex; flex-direction: column; gap: 9px; margin-top: 18px; }
+
+    .opt {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 16px;
+      border: 2px solid #e8e8e8;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      font-size: .88rem;
+      font-weight: 500;
+      color: #333;
+      user-select: none;
+    }
+    .opt:hover { border-color: #ff5f1f; background: #fff8f5; }
+    .opt.selected { border-color: #ff5f1f; background: #fff3ee; color: #111; }
+    .opt-dot {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      border: 2px solid #ccc;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color .15s, background .15s;
+    }
+    .opt.selected .opt-dot { border-color: #ff5f1f; background: #ff5f1f; }
+    .opt-dot::after {
+      content: '';
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #fff;
+      display: none;
+    }
+    .opt.selected .opt-dot::after { display: block; }
+    /* checkbox style for multi */
+    .opt.multi .opt-dot { border-radius: 5px; }
+    .opt.multi.selected .opt-dot::after {
+      content: '✓';
+      font-size: 11px;
+      width: auto; height: auto;
+      border-radius: 0;
+      font-weight: 800;
+    }
+
+    /* Nav */
+    .nav {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid #f0f0f0;
+    }
+    .btn {
+      padding: 13px 24px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: .88rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: opacity .15s, transform .1s;
+    }
+    .btn:active { transform: scale(.98); }
+    .btn-primary { background: #ff5f1f; color: #fff; flex: 1; }
+    .btn-primary:hover { opacity: .9; }
+    .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-back { background: #f0f0f0; color: #555; }
+    .btn-back:hover { background: #e8e8e8; }
+
+    /* Intro form */
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: .78rem; font-weight: 700; color: #555; margin-bottom: 6px; letter-spacing: .04em; text-transform: uppercase; }
+    .field input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 2px solid #e8e8e8;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: .9rem;
+      font-weight: 500;
+      color: #111;
+      transition: border-color .15s;
+      outline: none;
+    }
+    .field input:focus { border-color: #ff5f1f; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Transition screen */
+    .transition-box {
+      background: #fff8f5;
+      border: 2px solid #ffe0d0;
+      border-radius: 14px;
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+    .transition-box h2 { font-size: 1rem; font-weight: 800; margin-bottom: 8px; color: #111; }
+    .transition-box p { font-size: .85rem; color: #555; line-height: 1.6; font-weight: 500; }
+    .topic-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ff5f1f;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: .82rem;
+      font-weight: 700;
+      margin-top: 14px;
+    }
+
+    /* Submitting */
+    .submitting-wrap { text-align: center; padding: 20px 0; }
+    .spinner {
+      width: 52px; height: 52px;
+      border: 4px solid #ffe0d0;
+      border-top-color: #ff5f1f;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .submitting-wrap h2 { font-size: 1.1rem; font-weight: 800; margin-bottom: 8px; }
+    .submitting-wrap p { font-size: .85rem; color: #777; font-weight: 500; }
+    .status-steps { margin-top: 24px; text-align: left; }
+    .status-step {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 0;
+      font-size: .83rem; font-weight: 600;
+      color: #bbb;
+      border-bottom: 1px solid #f0f0f0;
+      transition: color .3s;
+    }
+    .status-step.done { color: #22c55e; }
+    .status-step.active { color: #ff5f1f; }
+    .status-step .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+    /* Result */
+    .result-icon { font-size: 3rem; text-align: center; margin-bottom: 12px; }
+    .result-box { text-align: center; margin-bottom: 24px; }
+    .result-box h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: 8px; }
+    .result-box p { font-size: .88rem; color: #555; font-weight: 500; line-height: 1.6; }
+    .gamma-link-wrap {
+      background: #f8f8f8;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+    .gamma-link-label { font-size: .72rem; font-weight: 700; color: #888; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; }
+    .gamma-link {
+      display: flex; align-items: center; gap: 10px;
+      background: #fff;
+      border: 2px solid #e8e8e8;
+      border-radius: 9px;
+      padding: 11px 14px;
+      font-size: .82rem;
+      font-weight: 600;
+      color: #333;
+      text-decoration: none;
+      word-break: break-all;
+      transition: border-color .15s;
+    }
+    .gamma-link:hover { border-color: #ff5f1f; }
+    .email-confirm {
+      display: flex; align-items: center; gap: 8px;
+      font-size: .82rem; font-weight: 600; color: #22c55e;
+      margin-top: 10px;
+    }
+    .btn-calendly {
+      display: block; width: 100%;
+      background: #111;
+      color: #fff;
+      padding: 15px 24px;
+      border-radius: 12px;
+      text-align: center;
+      text-decoration: none;
+      font-family: inherit;
+      font-size: .92rem;
+      font-weight: 700;
+      transition: opacity .15s;
+    }
+    .btn-calendly:hover { opacity: .85; }
+    .calendly-sub { font-size: .78rem; color: #888; text-align: center; margin-top: 8px; font-weight: 500; }
+
+    /* Error */
+    .error-box {
+      background: #fff3f3;
+      border: 2px solid #fca5a5;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .error-box h3 { font-size: .95rem; font-weight: 800; color: #dc2626; margin-bottom: 6px; }
+    .error-box p { font-size: .83rem; color: #555; font-weight: 500; line-height: 1.6; }
+
+    /* Resume banner */
+    .resume-banner {
+      background: #fff3ee;
+      border: 2px solid #ffd0b5;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .resume-banner p { font-size: .82rem; font-weight: 600; color: #333; flex: 1; }
+    .btn-resume { background: #ff5f1f; color: #fff; padding: 8px 14px; border-radius: 8px; font-family: inherit; font-size: .78rem; font-weight: 700; border: none; cursor: pointer; white-space: nowrap; }
+
+    @media (max-width: 480px) {
+      .hdr, .body, .progress-wrap { padding-left: 22px; padding-right: 22px; }
+      .field-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="card" id="app"></div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const CFG = {
+  // Make/Zapier Webhook URL – hier eintragen nach Einrichtung:
+  webhookUrl: 'https://hooks.zapier.com/hooks/catch/11104389/4opimsj/',
+  trlEmail:   'beratung@tabula-rasa.life',
+  calendly:   'https://calendly.com/tabula_rasa_life/60-minuten-auswander-beratung',
+  // Gamma-Einstellungen (werden vom Webhook/Make verwendet):
+  gammaThemeId: 'dialogue'
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let S = {
+  vorname: '', nachname: '', email: '',
+  f1:[], f2:[], f3:'', f4:'', f5:'',
+  f6:[], f7:'', f8:'', f9:'', f10:'',
+  f11:'', f12:'', f13:'', f14:'',
+  f15:'', f16:'', f17:'',
+  p2: {}  // keyed by topic id
+};
+
+let screen    = 'intro';   // intro|phase1|transition|phase2|submitting|result|error
+let p1Step    = 0;         // 0-16
+let p2Topics  = [];        // triggered topic ids
+let p2Step    = 0;
+let errorMsg  = '';
+let statusStep = 0;        // 0-2 for submitting animation
+
+// ============================================================
+// PHASE 1 QUESTIONS
+// ============================================================
+const P1 = [
+  { id:'f1', q:'Wer geht den Weg mit dir?', hint:'Mehrfachauswahl möglich.', type:'multi',
+    opts:[{v:'solo',l:'Solo'},{v:'paar',l:'Paar'},{v:'familie',l:'Familie'},{v:'angehoerige',l:'Mit zu betreuenden Angehörigen'}] },
+  { id:'f2', q:'Kommen Kinder mit – und wenn ja, wie alt sind sie?', hint:'Mehrfachauswahl möglich.', type:'multi',
+    opts:[{v:'keine',l:'Keine Kinder'},{v:'unter6',l:'Unter 6 Jahre'},{v:'sechs10',l:'6–10 Jahre'},{v:'zehn16',l:'10–16 Jahre'},{v:'ueber16',l:'Über 16 Jahre'}] },
+  { id:'f3', q:'Wie lange willst du Deutschland hinter dir lassen?', type:'single',
+    opts:[{v:'unter6m',l:'Unter 6 Monate'},{v:'sechs12m',l:'6–12 Monate'},{v:'laenger1j',l:'Länger als 1 Jahr'},{v:'dauerhaft',l:'Dauerhaft'},{v:'offen',l:'Noch offen'}] },
+  { id:'f4', q:'Habt ihr schon ein Zielland?', type:'single',
+    opts:[{v:'fest',l:'Festes Zielland'},{v:'mehrere',l:'Mehrere im Blick'},{v:'bewegung',l:'Wir bleiben in Bewegung (ohne festen Wohnsitz)'},{v:'offen',l:'Noch komplett offen'}] },
+  { id:'f5', q:'Wie wohnst du gerade in Deutschland?', type:'single',
+    opts:[{v:'miete',l:'Mietwohnung oder Miethaus'},{v:'eigentum',l:'Eigentum (selbst genutzt)'},{v:'familie',l:'Bei Familie oder Partner'},{v:'keiner',l:'Kein eigener Wohnsitz'}] },
+  { id:'f6', q:'Wie ist deine berufliche Situation?', hint:'Mehrfachauswahl möglich.', type:'multi',
+    opts:[{v:'angestellt',l:'Angestellt'},{v:'selbst',l:'Selbstständig'},{v:'freiberuf',l:'Freiberuflich'},{v:'unternehmer',l:'Unternehmer mit eigener Firma'},{v:'beamter',l:'Beamter/Beamtin'},{v:'rentner',l:'Rentner/in'},{v:'studium',l:'Studium oder Ausbildung'},{v:'ohne',l:'Ohne Einkommen'},{v:'ksk',l:'Künstlersozialkasse'},{v:'elternzeit',l:'Elternzeit'}] },
+  { id:'f7', q:'Besitzt du in Deutschland eine oder mehrere Immobilien?', type:'single',
+    opts:[{v:'ja',l:'Ja'},{v:'nein',l:'Nein'}] },
+  { id:'f8', q:'Ist in Deutschland ein Fahrzeug auf dich angemeldet?\n(Auto, Motorrad, Wohnmobil, Anhänger)', type:'single',
+    opts:[{v:'ja',l:'Ja'},{v:'nein',l:'Nein'}] },
+  { id:'f9', q:'Bist du Mitglied einer Kirche?', type:'single',
+    opts:[{v:'ja',l:'Ja'},{v:'nein',l:'Nein'}] },
+  { id:'f10', q:'Kommt ein Haustier mit?', type:'single',
+    opts:[{v:'ja',l:'Ja'},{v:'nein',l:'Nein'}] },
+  { id:'f11', q:'Hast du in Deutschland laufende Kredite oder Schulden?', type:'single',
+    opts:[{v:'ja',l:'Ja'},{v:'nein',l:'Nein'}] },
+  { id:'f12', q:'Hast du Wertpapiere, Fonds, Krypto oder andere nennenswerte Investments?', type:'single',
+    opts:[{v:'ja',l:'Ja'},{v:'nein',l:'Nein'}] },
+  { id:'f13', q:'Bist du an einer Firma beteiligt?\n(GmbH, AG, UG, Limited oder Ähnliches – in Deutschland oder im Ausland)', type:'single',
+    opts:[{v:'ja',l:'Ja'},{v:'nein',l:'Nein'}] },
+  { id:'f14', q:'Wird nach dem Wegzug noch Geld aus deutschen Quellen zu dir fließen?\n(Lohn, Miete, Rente, Honorare, Gewinnausschüttungen)', type:'single',
+    opts:[{v:'ja',l:'Ja'},{v:'nein',l:'Nein'},{v:'unklar',l:'Noch unklar'}] },
+  { id:'f15', q:'Gibt es familienrechtliche Themen, die wir mitdenken sollten?\n(geteiltes Sorgerecht, laufende Verfahren, Mitspracherechte)', type:'single',
+    opts:[{v:'ja',l:'Ja'},{v:'nein',l:'Nein'}] },
+  { id:'f16', q:'Steht bei dir eine Erbschaft oder Schenkung an oder bist du bereits begünstigt?', type:'single',
+    opts:[{v:'ja',l:'Ja'},{v:'nein',l:'Nein'},{v:'unklar',l:'Noch unklar'}] },
+  { id:'f17', q:'Bist du in Deutschland für die Pflege oder Betreuung einer anderen Person verantwortlich?', type:'single',
+    opts:[{v:'ja',l:'Ja'},{v:'nein',l:'Nein'}] }
+];
+
+// ============================================================
+// PHASE 2 TOPICS
+// ============================================================
+// type: 'op'=operative, 'dec'=decision
+// sel: 'single'|'multi' (operative only)
+// trigger(s): function returning bool
+// opts: [{v, l, todo, cl}]  cl=checklist label
+// trl: TRL-Angebot text or null
+
+const TOPICS = [
+  // --- 1. PÄSSE, AUSWEISE ---
+  { id:'t30', sec:1, name:'Pässe und Ausweisdokumente', type:'op', sel:'multi',
+    trigger: s => true,
+    q: 'Wie sieht es bei dir mit den Ausweisdokumenten aus? Wähle alles, was zutrifft.',
+    opts: [
+      { v:'aktuell',    l:'Alle Dokumente sind aktuell und noch lange gültig.', todo: null, cl: null },
+      { v:'reisepass',  l:'Mein Reisepass läuft demnächst ab.',           todo:'Reisepass rechtzeitig vor dem Wegzug verlängern (10 Jahre Gültigkeit anstreben).',  cl:'Reisepass verlängern' },
+      { v:'ausweis',    l:'Mein Personalausweis läuft demnächst ab.',      todo:'Personalausweis rechtzeitig erneuern.',                                             cl:'Personalausweis erneuern' },
+      { v:'kinderpass', l:'Ein Kinderpass läuft ab oder fehlt.',           todo:'Kinderausweisdokumente prüfen und neu beantragen.',                                 cl:'Kinderpässe erneuern' },
+      { v:'passbilder', l:'Mir fehlen aktuelle biometrische Passbilder.',   todo:'Biometrische Passbilder für alle Familienmitglieder anfertigen lassen.',           cl:'Biometrische Passbilder' },
+      { v:'ungeprueft', l:'Noch nicht geprüft.',                           todo:'Gültigkeit aller Ausweisdokumente prüfen und bei Bedarf erneuern.',                cl:'Ausweisdokumente prüfen' }
+    ], trl: null },
+
+  { id:'t31', sec:1, name:'Führerschein', type:'op', sel:'single',
+    trigger: s => true,
+    q: 'Wie soll dein Führerschein-Setup für die Zeit im Ausland aussehen?',
+    opts: [
+      { v:'int',     l:'Ich will einen internationalen Führerschein dabei haben.',       todo:'Internationalen Führerschein vor dem Wegzug beantragen (gilt 3 Jahre).',                                                      cl:'Internationaler Führerschein' },
+      { v:'umschreib',l:'Ich will den Führerschein im Zielland umschreiben lassen.',    todo:'Voraussetzungen im Zielland prüfen und Führerschein bei Bedarf übersetzen oder beglaubigen lassen.',                          cl:'Führerschein umschreiben' },
+      { v:'deutsch', l:'Mein deutscher Führerschein reicht mir.',                       todo:'Anerkennung des deutschen Führerscheins im Zielland prüfen und Übersetzung bei Bedarf mitführen.',                            cl:'Führerschein-Anerkennung prüfen' },
+      { v:'unklar',  l:'Noch unklar.',                                                  todo:'BERATUNGSTHEMA', cl:'Führerschein' }
+    ], trl: null },
+
+  { id:'t32', sec:1, name:'Sonstige Dokumente', type:'op', sel:'multi',
+    trigger: s => true,
+    q: 'Welche dieser Dokumente brauchst du voraussichtlich? Wähle alles aus, was relevant ist.',
+    opts: [
+      { v:'geburt',   l:'(Internationale) Geburtsurkunde',           todo:'Internationale Geburtsurkunde besorgen, bei Bedarf mit Apostille.',                                    cl:'Geburtsurkunde mit Apostille' },
+      { v:'heirat',   l:'Heiratsurkunde oder Scheidungsurteil',      todo:'Dokument besorgen, bei Bedarf übersetzen und legalisieren lassen.',                                    cl:'Heirats-/Scheidungsurkunde' },
+      { v:'fuehrung', l:'Polizeiliches Führungszeugnis',             todo:'Führungszeugnis beantragen (für viele Behörden maximal 6 Monate alt).',                                cl:'Führungszeugnis beantragen' },
+      { v:'vollmacht',l:'Vollmachten (Gesundheit, Pass, Reise)',     todo:'Vollmachten aufsetzen und bei Bedarf notariell beglaubigen lassen.',                                   cl:'Vollmachten aufsetzen' },
+      { v:'beratung', l:'In der Beratung besprechen.',               todo:'BERATUNGSTHEMA', cl:'Sonstige Dokumente' },
+      { v:'nichts',   l:'Brauche aktuell nichts davon.',             todo: null, cl: null }
+    ], trl: null },
+
+  // --- 2. ZIELLAND ---
+  { id:'t33', sec:2, name:'Aufenthaltsgenehmigung und Visum', type:'op', sel:'single',
+    trigger: s => s.f4 !== 'bewegung',
+    q: 'Welche Aufenthaltsform habt ihr im Zielland im Sinn?',
+    opts: [
+      { v:'tourist',  l:'Touristenstatus (visafrei oder kurzes Visum)',                      todo:'Einreisebestimmungen prüfen und maximale Aufenthaltsdauer im Blick behalten.',                                                cl:'Einreisebedingungen prüfen' },
+      { v:'befristet',l:'Befristete Aufenthaltsgenehmigung (z.B. Arbeit, Studium, Investor)', todo:'Visa-Antrag im Zielland recherchieren und Unterlagen vorbereiten.',                                                         cl:'Visaantrag vorbereiten' },
+      { v:'dauerhaft',l:'Dauerhafte Aufenthaltsgenehmigung',                                 todo:'Anforderungen für dauerhaften Aufenthalt klären und Antragsprozess einleiten.',                                             cl:'Dauerhafter Aufenthalt beantragen' },
+      { v:'heirat',   l:'Aufenthalt durch Heirat oder Geburt eines Kindes im Zielland',      todo:'Dokumente vorbereiten und Antragsprozess im Zielland einleiten.',                                                          cl:'Aufenthalt durch Familienrecht' },
+      { v:'unklar',   l:'Noch unklar.',                                                       todo:'BERATUNGSTHEMA', cl:'Aufenthaltsgenehmigung' }
+    ], trl:'Für eine Aufenthaltsgenehmigung oder die Gründung eines Compliance-Wohnsitzes im Ausland haben wir Partner vor Ort, die wir dir empfehlen können.' },
+
+  { id:'t34', sec:2, name:'Zweite Staatsbürgerschaft', type:'op', sel:'single',
+    trigger: s => true,
+    q: 'Wie ist deine Situation beim Thema „Zweite Staatsbürgerschaft"?',
+    opts: [
+      { v:'mehr',     l:'Dazu möchte ich mehr erfahren.',  todo:'BERATUNGSTHEMA', cl:'Zweite Staatsbürgerschaft' },
+      { v:'geklaert', l:'Ist geklärt.',                    todo: null, cl: null },
+      { v:'keinthema',l:'Ist aktuell kein Thema.',         todo: null, cl: null }
+    ],
+    trl:'Zur zweiten Staatsbürgerschaft haben wir bei TRL ein konkretes Angebot.' },
+
+  // --- 3. KINDER / SCHULE ---
+  { id:'t25', sec:3, name:'Bildungsweg der Kinder', type:'op', sel:'multi',
+    trigger: s => !s.f2.includes('keine') && s.f2.length > 0,
+    q: 'Welcher Bildungsweg ist für eure Kinder im Ausland angedacht? Wähle alles aus, was passt – auch verschiedene Wege pro Kind.',
+    opts: [
+      { v:'home',   l:'Freilernen / Homeschooling',            todo:'Schulbefreiung vor der Abmeldung beantragen; schulrechtliche Lage im Zielland prüfen; Lernmaterialien organisieren.',                                   cl:'Schulbefreiung beantragen', trlInline: null },
+      { v:'online', l:'Online- oder Fernschule',               todo:'Online- oder Fernschule recherchieren und einschreiben; Anerkennung der Abschlüsse prüfen.',                                                            cl:'Online-Schule einschreiben', trlInline:'Zu empfohlenen Online- und Fernschulen haben wir bei TRL konkrete Angebote.' },
+      { v:'lokal',  l:'Lokale Schule im Zielland',             todo:'Schule im Zielland recherchieren; Sprach-Setup für die Kinder klären; Übergangslösung bis zur Einschulung organisieren.',                               cl:'Lokale Schule recherchieren' },
+      { v:'intl',   l:'Internationale Schule im Zielland',     todo:'Internationale Schule recherchieren; Anmeldung und Kostenplanung organisieren.',                                                                        cl:'Internationale Schule anmelden' },
+      { v:'mix',    l:'Mischmodell (z.B. Homeschooling und lokale Aktivitäten)', todo:'Schulbefreiung beantragen; Bildungsmix planen; Sozialkontakte für die Kinder im Zielland organisieren.',                              cl:'Bildungs-Mischmodell planen' },
+      { v:'unklar', l:'Noch unklar.',                          todo:'BERATUNGSTHEMA', cl:'Bildungsweg Kinder' }
+    ], trl: null },
+
+  { id:'t27', sec:3, name:'Kindergeld', type:'op', sel:'single',
+    trigger: s => !s.f2.includes('keine') && s.f2.length > 0,
+    q: 'Wie ist eure Situation rund ums Kindergeld?',
+    opts: [
+      { v:'behalten', l:'Wir beziehen Kindergeld und wollen den Anspruch nach Möglichkeit behalten.', todo:'Anspruchsvoraussetzungen prüfen; Familienkasse über den Wegzug informieren; Nachweise vorbereiten.',             cl:'Kindergeld-Anspruch prüfen' },
+      { v:'entfaellt',l:'Wir beziehen Kindergeld, der Anspruch entfällt voraussichtlich.',            todo:'Familienkasse aktiv über den Wegzug informieren (sonst drohen Rückforderungen); Auszahlung rechtzeitig beenden.', cl:'Familienkasse informieren' },
+      { v:'keins',    l:'Wir beziehen kein Kindergeld.',                                              todo: null, cl: null },
+      { v:'unklar',   l:'Noch unklar.',                                                               todo:'BERATUNGSTHEMA', cl:'Kindergeld' }
+    ], trl: null },
+
+  { id:'t28', sec:3, name:'Eltern- und Mutterschaftsgeld', type:'op', sel:'multi',
+    trigger: s => s.f2.includes('unter6') || s.f6.includes('elternzeit'),
+    q: 'Welche dieser Punkte treffen auf dich zu? Wähle alles aus, was passt.',
+    opts: [
+      { v:'elterngeld', l:'Ich beziehe gerade Elterngeld.',                            todo:'Auswirkungen der Abmeldung auf den Elterngeldbezug prüfen.',                                             cl:'Elterngeld beim Wegzug klären' },
+      { v:'elternzeit', l:'Ich bin in Elternzeit, mein Arbeitsverhältnis besteht weiter.', todo:'Arbeitsrechtliche Folgen der Abmeldung klären und Rückkehrszenarien besprechen.',                   cl:'Arbeitsrecht Elternzeit prüfen' },
+      { v:'beamteltern',l:'Ich bin Beamtin oder Beamter in Elternzeit.',               todo:'Sonderfall Beamtenstatus in Elternzeit klären.',                                                         cl:'Beamtenstatus Elternzeit' },
+      { v:'muttergeld', l:'Ich beziehe Mutterschaftsgeld.',                            todo:'Mutterschaftsgeld-Bezug bei Wegzug mit der Krankenkasse klären.',                                       cl:'Mutterschaftsgeld klären' },
+      { v:'nichts',     l:'Nichts davon trifft auf mich zu.',                          todo: null, cl: null }
+    ], trl: null },
+
+  // --- 4. VERSICHERUNG ---
+  { id:'t21', sec:4, name:'Krankenversicherung', type:'op', sel:'single',
+    trigger: s => true,
+    q: 'Wie soll dein Krankenversicherungsschutz im Ausland aussehen?',
+    opts: [
+      { v:'expat',     l:'Internationale Krankenversicherung (Expat-Tarif)',           todo:'Anbieter vergleichen und Vertrag abschließen; Deckung und Selbstbehalte prüfen.',                       cl:'Internationale Krankenversicherung' },
+      { v:'reise',     l:'Auslandsreisekrankenversicherung (kurzfristig)',              todo:'Police abschließen; Geltungsbereich und Aufenthaltsdauer prüfen.',                                       cl:'Auslandskrankenversicherung' },
+      { v:'lokal',     l:'Lokale Krankenversicherung im Zielland',                     todo:'Versicherungssystem des Ziellandes recherchieren und Anmeldung organisieren.',                           cl:'Lokale Krankenversicherung' },
+      { v:'anwartsch', l:'Deutsche Versicherung ruhend stellen (Anwartschaft)',        todo:'Anwartschaft bei der deutschen Versicherung beantragen.',                                                cl:'KV-Anwartschaft beantragen' },
+      { v:'kuendigen', l:'Deutsche Versicherung kündigen',                             todo:'Kündigung fristgerecht einreichen und Anschlussversicherung lückenlos sichern.',                         cl:'Krankenversicherung kündigen' },
+      { v:'unklar',    l:'Noch unklar.',                                               todo:'BERATUNGSTHEMA', cl:'Krankenversicherung' }
+    ], trl:'Zur internationalen Krankenversicherung haben wir bei TRL ein konkretes Angebot.' },
+
+  { id:'t22', sec:4, name:'Gesetzliche Rentenversicherung', type:'op', sel:'single',
+    trigger: s => true,
+    q: 'Wie soll deine Rentenversicherung weiterlaufen?',
+    opts: [
+      { v:'freiwillig', l:'Freiwillig weiter einzahlen.',                              todo:'Antrag auf freiwillige Versicherung bei der Deutschen Rentenversicherung stellen; Beitragshöhe wählen.', cl:'Freiwillige Rentenversicherung beantragen' },
+      { v:'nein',       l:'Beiträge enden, keine freiwilligen Einzahlungen.',          todo:'Deutsche Rentenversicherung über den Wegzug informieren; Versicherungsverlauf anfordern; Rentenlücke prüfen.', cl:'Rentenversicherung abmelden' },
+      { v:'rente',      l:'Ich beziehe bereits Rente.',                                todo:'Auslandszahlung der Rente mit der Deutschen Rentenversicherung abklären.',                               cl:'Rentenauslandszahlung klären' },
+      { v:'unklar',     l:'Noch unklar.',                                              todo:'BERATUNGSTHEMA', cl:'Rentenversicherung' }
+    ], trl: null },
+
+  { id:'t23', sec:4, name:'Weitere Versicherungen', type:'op', sel:'multi',
+    trigger: s => true,
+    q: 'Weißt du, welche Versicherungen du kündigen willst und welche du auch im Ausland nutzen möchtest? Mehrfachauswahl möglich.',
+    opts: [
+      { v:'klar',      l:'Alles bereits erledigt bzw. klar.',                          todo: null, cl: null },
+      { v:'pruefen',   l:'Muss noch Versicherungen prüfen und kündigen.',              todo:'Bestehende Versicherungen (Haftpflicht, Hausrat, Unfall, BU, Lebensversicherung) auf Auslandsgültigkeit prüfen und ggf. kündigen.', cl:'Versicherungen prüfen und kündigen', trlInline:'Zu Versicherungen im Ausland (z.B. Haftpflicht) bieten wir bei TRL konkrete Angebote.' },
+      { v:'weisnicht', l:'Ich weiß noch nicht, welche ich im Ausland brauche.',        todo:'BERATUNGSTHEMA', cl:'Versicherungsbedarf im Ausland' },
+      { v:'kvoffen',   l:'Das Thema Krankenversicherung ist noch offen.',              todo:'BERATUNGSTHEMA', cl:'Krankenversicherung im Ausland' }
+    ], trl: null },
+
+  { id:'t24', sec:4, name:'Kfz-Versicherung', type:'op', sel:'multi',
+    trigger: s => s.f8 === 'ja',
+    q: 'Was passiert mit deiner Kfz-Versicherung? Wähle alles aus, was passt – auch unterschiedliche Wege pro Fahrzeug.',
+    opts: [
+      { v:'bleibt',    l:'Das Fahrzeug bleibt in Deutschland angemeldet.',             todo:'Versicherer über den Wegzug informieren; Konditionen für Auslandshalterschaft klären.',                 cl:'Kfz-Versicherung anpassen' },
+      { v:'ausland',   l:'Das Fahrzeug wird ins Ausland überführt.',                   todo:'Kfz-Versicherung im Zielland abschließen; deutsche Versicherung kündigen.',                             cl:'Kfz-Versicherung Ausland' },
+      { v:'verkauft',  l:'Das Fahrzeug wird verkauft oder abgemeldet.',               todo:'Kfz-Versicherung nach Abmeldung des Fahrzeugs kündigen.',                                               cl:'Kfz-Versicherung kündigen' },
+      { v:'unklar',    l:'Noch unklar.',                                               todo:'BERATUNGSTHEMA', cl:'Kfz-Versicherung' }
+    ], trl: null },
+
+  // --- 5. WOHNEN ---
+  { id:'t12', sec:5, name:'Hausstand auflösen oder einlagern', type:'op', sel:'multi',
+    trigger: s => ['miete','eigentum','familie'].includes(s.f5),
+    q: 'Was soll mit deinem Hausstand (Möbel, persönliche Gegenstände) passieren? Wähle alles aus, was passt – oft ist es ein Mix.',
+    opts: [
+      { v:'aufloesen', l:'Komplett auflösen (verkaufen, verschenken, spenden).',       todo:'Verkaufs- und Spendenkanäle aufsetzen; Zeitplan für die Auflösung definieren.',                         cl:'Hausstand auflösen' },
+      { v:'lagern',    l:'Teilweise einlagern (Lagerraum mieten oder Self-Storage).',  todo:'Lagermöglichkeit organisieren; Inventarliste anlegen; Kostenplanung machen.',                            cl:'Hausstand einlagern' },
+      { v:'familie',   l:'Bei Familie oder Freunden unterstellen.',                    todo:'Absprache mit Bezugsperson treffen und Inventar dokumentieren.',                                         cl:'Hausstand unterstellen' },
+      { v:'unklar',    l:'Noch unklar.',                                               todo:'BERATUNGSTHEMA', cl:'Hausstand' }
+    ], trl: null },
+
+  { id:'t13', sec:5, name:'Mietvertrag', type:'op', sel:'single',
+    trigger: s => s.f5 === 'miete',
+    q: 'Was soll mit deiner Mietwohnung passieren?',
+    opts: [
+      { v:'kuendigen',  l:'Kündigen.',                                                 todo:'Mietvertrag fristgerecht kündigen; Übergabe organisieren; Kaution zurückfordern.',                       cl:'Mietvertrag kündigen' },
+      { v:'untermiete', l:'Untervermieten.',                                           todo:'Erlaubnis des Vermieters einholen und Untermietvertrag aufsetzen.',                                       cl:'Untermietvertrag aufsetzen' },
+      { v:'partner',    l:'Partner oder Mitbewohner übernimmt.',                       todo:'Mietvertrags-Anpassung oder neuen Vertrag mit dem Vermieter klären.',                                    cl:'Mietvertragsübernahme klären' },
+      { v:'unklar',     l:'Noch unklar.',                                              todo:'BERATUNGSTHEMA', cl:'Mietvertrag' }
+    ], trl: null },
+
+  { id:'t14', sec:5, name:'Eigene Immobilie in Deutschland', type:'op', sel:'multi',
+    trigger: s => s.f5 === 'eigentum' || s.f7 === 'ja',
+    q: 'Was soll mit deinen Immobilien passieren? Wähle alles aus, was passt – auch unterschiedliche Wege pro Immobilie.',
+    opts: [
+      { v:'verkaufen',  l:'Verkaufen.',                                                todo:'Verkaufsprozess starten (Makler oder Privatverkauf); steuerliche Folgen klären; Energieausweis bereithalten.', cl:'Immobilie verkaufen', trlInline:'Für den Immobilienverkauf vor dem Wegzug bieten wir bei TRL gezielte Unterstützung.' },
+      { v:'vermieten',  l:'Vermieten.',                                                todo:'Hausverwaltung organisieren; Mietvertrag aufsetzen; steuerliche Folgen klären.',                        cl:'Immobilie vermieten' },
+      { v:'leer',       l:'Leer stehen lassen.',                                      todo:'Hausbetreuung organisieren; Versicherungslage und Pflichten prüfen.',                                     cl:'Hausbetreuung organisieren' },
+      { v:'familie',    l:'Familie oder Partner nutzt sie.',                           todo:'Nutzungsregelung schriftlich festhalten und Kostenverteilung klären.',                                    cl:'Nutzungsregelung Immobilie' },
+      { v:'unklar',     l:'Noch unklar.',                                              todo:'BERATUNGSTHEMA', cl:'Immobilie' }
+    ], trl: null },
+
+  { id:'t15', sec:5, name:'Empfangsbevollmächtigte Person und Postadresse', type:'op', sel:'multi',
+    trigger: s => true,
+    q: 'Wie willst du nach dem Wegzug postalisch in Deutschland erreichbar bleiben? Wähle alles aus, was passt.',
+    opts: [
+      { v:'bevoll',    l:'Empfangsbevollmächtigte/r (Familie oder Freunde)',           todo:'Person benennen; Vollmacht ausstellen; Adresse bei Behörden, Banken und Versicherungen hinterlegen.',   cl:'Empfangsbevollmächtigte/n benennen' },
+      { v:'scan',      l:'Digitaler Scan-Service',                                    todo:'Anbieter auswählen und buchen; Adressen bei Konten und Verträgen umstellen.',                            cl:'Digitalen Scan-Service buchen' },
+      { v:'informell', l:'Informelle Postadresse bei Familie',                        todo:'Absprache mit der Bezugsperson treffen; Adresse zentral kommunizieren.',                                  cl:'Postadresse bei Familie' },
+      { v:'nachsende', l:'Nachsendeauftrag bei der Deutschen Post',                   todo:'Nachsendeauftrag bei der Deutschen Post einrichten (Laufzeit beachten).',                                cl:'Nachsendeauftrag einrichten' },
+      { v:'unklar',    l:'Noch unklar.',                                              todo:'BERATUNGSTHEMA', cl:'Postadresse' }
+    ], trl: null },
+
+  { id:'t11', sec:5, name:'Melderechtliche Abmeldung aus Deutschland', type:'dec',
+    trigger: s => true,
+    q: 'Hast du das Thema „Melderechtliche Abmeldung aus Deutschland" für dich bereits geklärt?',
+    decName: 'Melderechtliche Abmeldung aus Deutschland', trl: null },
+
+  // --- 6. KFZ ---
+  { id:'t29', sec:6, name:'Kfz-Halterschaft nach dem Wegzug', type:'op', sel:'multi',
+    trigger: s => s.f8 === 'ja',
+    q: 'Wie soll mit deinem Fahrzeug nach dem Wegzug umgegangen werden? Wähle alles aus, was passt – auch unterschiedliche Wege pro Fahrzeug.',
+    opts: [
+      { v:'bleibt',   l:'Fahrzeug bleibt in Deutschland angemeldet (ich bleibe Halter).', todo:'Empfangsbevollmächtigte/n für Kfz-Behörde benennen; Garage oder Stellplatz organisieren.',           cl:'Kfz-Empfangsbevollmächtigte/n benennen' },
+      { v:'ausland',  l:'Fahrzeug wird ins Ausland überführt.',                        todo:'Ummeldung im Zielland organisieren und deutsche Zulassung abmelden.',                                    cl:'Fahrzeug ins Ausland ummelden' },
+      { v:'verkauft', l:'Fahrzeug wird verkauft.',                                     todo:'Verkauf abwickeln; Fahrzeug abmelden; Papiere übergeben.',                                              cl:'Fahrzeug verkaufen' },
+      { v:'halter',   l:'Halter wird Familie oder Partner.',                           todo:'Halterwechsel beim Straßenverkehrsamt vornehmen.',                                                       cl:'Kfz-Halterwechsel' },
+      { v:'unklar',   l:'Noch unklar.',                                               todo:'BERATUNGSTHEMA', cl:'Kfz-Halterschaft' }
+    ], trl: null },
+
+  // --- 7. VERTRÄGE ---
+  { id:'t16', sec:7, name:'Versorgerverträge', type:'op', sel:'multi',
+    trigger: s => ['miete','eigentum'].includes(s.f5),
+    q: 'Was soll mit deinen Versorgerverträgen passieren?\n(Strom, Gas, Wasser, Internet, Festnetz) – wähle alles aus, was passt.',
+    opts: [
+      { v:'alle',     l:'Alle kündigen.',                                              todo:'Strom-, Gas-, Wasser-, Internet- und Festnetzverträge fristgerecht kündigen; Endabrechnungen aufbewahren.', cl:'Versorgerverträge kündigen' },
+      { v:'uebernahme',l:'Übernahme durch Nachmieter oder Familie.',                  todo:'Vertragswechsel mit den Versorgern abstimmen.',                                                           cl:'Versorger-Übernahme abstimmen' },
+      { v:'weiter',   l:'Verträge laufen weiter.',                                    todo:'Zahlungsweg sicherstellen und Zählerstände dokumentieren.',                                               cl:'Zahlungsweg Versorger sichern' },
+      { v:'unklar',   l:'Noch unklar.',                                               todo:'BERATUNGSTHEMA', cl:'Versorgerverträge' }
+    ], trl: null },
+
+  { id:'t17', sec:7, name:'Mobilfunk', type:'op', sel:'multi',
+    trigger: s => true,
+    q: 'Wie willst du im Ausland telefonisch erreichbar sein? Wähle alles aus, was passt.',
+    opts: [
+      { v:'bleibt',   l:'Deutscher Mobilfunkvertrag bleibt bestehen.',                todo:'Roaming-Konditionen prüfen; Tarif bei Bedarf anpassen; Adresse beim Anbieter aktualisieren.',            cl:'Mobilfunk-Roaming prüfen' },
+      { v:'prepaid',  l:'Deutsche Nummer auf Prepaid umstellen.',                     todo:'Auf Prepaid-Tarif wechseln und Nummer parken.',                                                           cl:'Nummer auf Prepaid parken' },
+      { v:'lokalsim', l:'Lokale SIM-Karte im Zielland.',                              todo:'Anbieter im Zielland recherchieren und Anbindung an Bank- und 2FA-Konten klären.',                       cl:'Lokale SIM-Karte' },
+      { v:'voip',     l:'VoIP-Dienst (z.B. Satellite).',                              todo:'VoIP-Dienst einrichten und Nummer aktivieren.',                                                           cl:'VoIP-Dienst einrichten' },
+      { v:'kuendigen',l:'Mobilfunkvertrag komplett kündigen.',                        todo:'Mobilfunkvertrag fristgerecht kündigen.',                                                                  cl:'Mobilfunkvertrag kündigen' },
+      { v:'unklar',   l:'Noch unklar.',                                               todo:'BERATUNGSTHEMA', cl:'Mobilfunk' }
+    ], trl: null },
+
+  { id:'t18', sec:7, name:'Abos und Mitgliedschaften', type:'op', sel:'multi',
+    trigger: s => true,
+    q: 'Was soll mit deinen Abos und Mitgliedschaften passieren? Wähle alles aus, was passt.',
+    opts: [
+      { v:'streaming_b',l:'Streaming- oder Software-Abos behalten.',                  todo:'Geografische Sperren prüfen und VPN-Setup einplanen.',                                                   cl:'Streaming-VPN einrichten' },
+      { v:'streaming_k',l:'Streaming- oder Software-Abos kündigen.',                  todo:'Liste aller Abos erstellen und fristgerecht kündigen.',                                                   cl:'Abos kündigen' },
+      { v:'verein',     l:'Vereinsmitgliedschaften ruhend stellen oder beenden.',      todo:'Mit den Vereinen Ruhendstellung oder Beendigung klären.',                                                cl:'Vereinsmitgliedschaft klären' },
+      { v:'fitness',    l:'Fitnessstudio oder ADAC kündigen.',                         todo:'Mitgliedschaften fristgerecht kündigen; Mindestlaufzeiten beachten.',                                    cl:'Fitness/ADAC kündigen' },
+      { v:'unklar',     l:'Noch unklar.',                                              todo:'BERATUNGSTHEMA', cl:'Abos und Mitgliedschaften' }
+    ], trl: null },
+
+  { id:'t19', sec:7, name:'Rundfunkbeitrag (GEZ)', type:'op', sel:'single',
+    trigger: s => ['miete','eigentum'].includes(s.f5),
+    q: 'Wie soll der Rundfunkbeitrag nach dem Wegzug geregelt werden?',
+    opts: [
+      { v:'abmelden', l:'Abmelden (kein Wohnsitz mehr in Deutschland).',              todo:'Beitragsservice schriftlich informieren und Abmeldebestätigung des Einwohnermeldeamts beilegen.',        cl:'GEZ abmelden' },
+      { v:'bleibt',   l:'Bleibt bestehen (Wohnsitz bleibt).',                         todo:'Beitragsthema klären und gegebenenfalls mit Mitbewohnern teilen.',                                        cl:'GEZ-Beitrag klären' },
+      { v:'unklar',   l:'Noch unklar.',                                               todo:'BERATUNGSTHEMA', cl:'Rundfunkbeitrag' }
+    ], trl: null },
+
+  { id:'t20', sec:7, name:'Kirchenaustritt', type:'dec',
+    trigger: s => s.f9 === 'ja',
+    q: 'Hast du das Thema „Kirchenaustritt" für dich bereits geklärt?',
+    decName: 'Kirchenaustritt', trl: null },
+
+  // --- 8. BANKEN / FINANZEN ---
+  { id:'t35', sec:8, name:'Bankkonten und Kreditkarten', type:'op', sel:'multi',
+    trigger: s => true,
+    q: 'Wie soll dein Banking-Setup nach dem Wegzug aussehen? Wähle alles aus, was passt.',
+    opts: [
+      { v:'deutsch',  l:'Deutsche Konten behalten.',                                  todo:'Banken über den Wegzug informieren; Adresse anpassen; Kompatibilität ohne deutschen Wohnsitz prüfen.',   cl:'Deutsche Konten prüfen' },
+      { v:'intl',     l:'Internationale Banken (z.B. Wise, Revolut, N26).',           todo:'Konto eröffnen; Daueraufträge umstellen; Kartenversand klären.',                                          cl:'Internationales Konto eröffnen' },
+      { v:'zielland', l:'Bank im Zielland.',                                          todo:'Eröffnungsvoraussetzungen prüfen und Konto im Zielland eröffnen.',                                        cl:'Konto im Zielland eröffnen' },
+      { v:'kreditkarte',l:'Kreditkarten neu organisieren.',                           todo:'Bestehende Karten auf Auslandsnutzung prüfen und bei Bedarf Ersatzkarten besorgen.',                      cl:'Kreditkarten für Ausland' },
+      { v:'unklar',   l:'Noch unklar.',                                               todo:'BERATUNGSTHEMA', cl:'Banking-Setup' }
+    ], trl:'Zu Auslandskonten und internationalen Banken haben wir bei TRL konkrete Empfehlungen und Angebote.' },
+
+  { id:'t36', sec:8, name:'Laufende Kredite oder Schulden', type:'op', sel:'multi',
+    trigger: s => s.f11 === 'ja',
+    q: 'Wie sollen deine Kredite und Verbindlichkeiten nach dem Wegzug behandelt werden? Wähle alles aus, was passt – auch unterschiedliche Wege pro Kredit.',
+    opts: [
+      { v:'bedienen', l:'Kredite weiter bedienen (Zahlung ist gesichert).',           todo:'Bank über den Wegzug informieren; Zahlungsweg sicherstellen; Adresse aktualisieren.',                    cl:'Kreditbedienung sichern' },
+      { v:'abloesen', l:'Kredit vorzeitig ablösen.',                                  todo:'Ablöseangebot anfordern und Vorfälligkeitsentschädigung prüfen.',                                        cl:'Kredit vorzeitig ablösen' },
+      { v:'anschluss',l:'Anschlussfinanzierung erforderlich.',                        todo:'Mit der Bank Konditionen ohne deutschen Wohnsitz klären.',                                               cl:'Anschlussfinanzierung klären' },
+      { v:'forderung',l:'Es gibt offene oder strittige Forderungen.',                 todo:'Forderungen vor dem Wegzug klären; Empfangsbevollmächtigte/n benennen.',                                 cl:'Offene Forderungen klären' },
+      { v:'unklar',   l:'Noch unklar.',                                               todo:'BERATUNGSTHEMA', cl:'Kredite und Schulden' }
+    ], trl:'Zur Auswanderung mit Schulden oder bei Insolvenzthemen bieten wir bei TRL gezielte Unterstützung.' },
+
+  { id:'t37', sec:8, name:'Wertpapierdepots, Investments und Krypto', type:'dec',
+    trigger: s => s.f12 === 'ja',
+    q: 'Hast du das Thema „Wertpapierdepots, Investments und Krypto" für dich bereits geklärt?',
+    decName: 'Wertpapierdepots, Investments und Krypto', trl: null },
+
+  { id:'t38', sec:8, name:'Wegzugsbesteuerung', type:'dec',
+    trigger: s => s.f13 === 'ja',
+    q: 'Hast du das Thema „Wegzugsbesteuerung" für dich bereits geklärt?',
+    decName: 'Wegzugsbesteuerung', trl: null },
+
+  // --- 9. BERUF / STEUERN ---
+  { id:'t39', sec:9, name:'Bestehendes Arbeitsverhältnis', type:'op', sel:'single',
+    trigger: s => s.f6.includes('angestellt'),
+    q: 'Was passiert mit deinem Arbeitsverhältnis?',
+    opts: [
+      { v:'remote',   l:'Es bleibt bestehen (Remote-Arbeit aus dem Ausland).',        todo:'Mit dem Arbeitgeber arbeits- und sozialversicherungsrechtliche Lage klären; steuerlichen Wohnsitz klären.', cl:'Arbeitsvertrag Remote klären' },
+      { v:'kuendigen',l:'Es wird gekündigt.',                                          todo:'Kündigung fristgerecht einreichen; Resturlaub und mögliche Abgeltung klären.',                           cl:'Arbeitsverhältnis kündigen' },
+      { v:'sabbatical',l:'Ruhendstellung oder Sabbatical.',                           todo:'Schriftliche Vereinbarung mit dem Arbeitgeber treffen.',                                                  cl:'Sabbatical vereinbaren' },
+      { v:'ausland',  l:'Wechsel zu einem ausländischen Arbeitgeber.',                todo:'Arbeitsvertrag im Zielland prüfen und Übergang planen.',                                                  cl:'Ausländischer Arbeitsvertrag' },
+      { v:'unklar',   l:'Noch unklar.',                                               todo:'BERATUNGSTHEMA', cl:'Arbeitsverhältnis' }
+    ], trl: null },
+
+  { id:'t40', sec:9, name:'Steuerliches Setup im Ausland', type:'dec',
+    trigger: s => true,
+    q: 'Hast du das Thema „Steuerliches Setup im Ausland" für dich bereits geklärt?',
+    decName: 'Steuerliches Setup im Ausland',
+    trl:'Zur passenden Steuerstrategie für deine Auswanderung haben wir bei TRL ein konkretes Angebot.' },
+
+  { id:'t41', sec:9, name:'Selbstständigkeit oder Firmengründung im Ausland', type:'dec',
+    trigger: s => s.f6.includes('selbst') || s.f6.includes('freiberuf') || s.f6.includes('unternehmer'),
+    q: 'Hast du das Thema „Selbstständigkeit oder Firmengründung im Ausland" für dich bereits geklärt?',
+    decName: 'Selbstständigkeit oder Firmengründung im Ausland',
+    trl:'Zu Firmengründungen im Ausland – inklusive LLC-Setup in den USA – haben wir bei TRL ein konkretes Angebot.' },
+
+  { id:'t42', sec:9, name:'Erweiterte beschränkte Steuerpflicht', type:'dec',
+    trigger: s => s.f3 === 'dauerhaft' && (s.f12 === 'ja' || s.f13 === 'ja' || s.f14 === 'ja'),
+    q: 'Hast du das Thema „Erweiterte beschränkte Steuerpflicht" für dich bereits geklärt?',
+    decName: 'Erweiterte beschränkte Steuerpflicht', trl: null },
+
+  { id:'t43', sec:9, name:'Beamtenstatus und Pension', type:'op', sel:'single',
+    trigger: s => s.f6.includes('beamter'),
+    q: 'Wie soll dein Beamten- oder Pensionärsstatus geregelt werden?',
+    opts: [
+      { v:'aktiv',   l:'Aktiver Beamter – soll bestehen bleiben.',                    todo:'Antrag auf Auslandstätigkeit oder Beurlaubung beim Dienstherrn stellen.',                               cl:'Beurlaubung Dienstherr' },
+      { v:'austritt',l:'Beamter – möchte aus dem Dienst.',                            todo:'Entlassungsverfahren prüfen und versorgungsrechtliche Folgen klären.',                                   cl:'Entlassung aus dem Beamtenstatus' },
+      { v:'pension', l:'Pensionär.',                                                  todo:'Auszahlungsmodalitäten der Pension im Ausland mit der Versorgungsstelle klären.',                        cl:'Pensionsauslandszahlung' },
+      { v:'unklar',  l:'Noch unklar.',                                                todo:'BERATUNGSTHEMA', cl:'Beamtenstatus' }
+    ], trl: null },
+
+  { id:'t44', sec:9, name:'Künstlersozialkasse (KSK)', type:'op', sel:'single',
+    trigger: s => s.f6.includes('ksk'),
+    q: 'Wie soll deine KSK-Mitgliedschaft geregelt werden?',
+    opts: [
+      { v:'behalten', l:'Beibehalten (ich bin überwiegend in Deutschland tätig).',    todo:'Voraussetzungen prüfen und Künstlersozialkasse über den Wegzug informieren.',                            cl:'KSK-Mitgliedschaft prüfen' },
+      { v:'beenden',  l:'Beenden.',                                                   todo:'Künstlersozialkasse über den Wegzug informieren; Austritt erklären; Anschlussversicherung klären.',       cl:'KSK-Austritt und Anschluss' },
+      { v:'unklar',   l:'Noch unklar.',                                               todo:'BERATUNGSTHEMA', cl:'Künstlersozialkasse' }
+    ], trl: null },
+
+  // --- 10. SONSTIGES ---
+  { id:'t45', sec:10, name:'Ausreise mit Haustier', type:'op', sel:'multi',
+    trigger: s => s.f10 === 'ja',
+    q: 'Welche Punkte sind für die Ausreise mit deinem Haustier zu klären? Wähle alles aus, was relevant ist.',
+    opts: [
+      { v:'ausweis',  l:'EU-Heimtierausweis prüfen.',                                 todo:'Heimtierausweis prüfen und bei Bedarf ausstellen lassen.',                                               cl:'Heimtierausweis prüfen' },
+      { v:'impfung',  l:'Impfungen aktualisieren (insbesondere Tollwut).',             todo:'Impfungen mit dem Tierarzt prüfen und fehlende rechtzeitig nachholen.',                                  cl:'Tierimpfungen aktualisieren' },
+      { v:'chip',     l:'Microchip vorhanden?',                                        todo:'Chip-Pflicht im Zielland prüfen und bei Bedarf chippen lassen.',                                         cl:'Microchip prüfen' },
+      { v:'einreise', l:'Einreisebestimmungen Zielland (Quarantäne, Bluttests).',      todo:'Vorgaben des Ziellandes recherchieren und Fristen für Tests einplanen.',                                 cl:'Einreise mit Tier klären' },
+      { v:'transport',l:'Transport organisieren (Flug, Auto).',                       todo:'Tiergerechten Transport buchen; Box- und Fluganforderungen klären.',                                     cl:'Tiertransport organisieren' },
+      { v:'unklar',   l:'Noch unklar.',                                               todo:'BERATUNGSTHEMA', cl:'Ausreise mit Haustier' }
+    ], trl: null },
+
+  { id:'t46', sec:10, name:'Sorgerecht und familienrechtliche Themen', type:'dec',
+    trigger: s => s.f15 === 'ja',
+    q: 'Hast du das Thema „Sorgerecht und familienrechtliche Themen" für dich bereits geklärt?',
+    decName: 'Sorgerecht und familienrechtliche Themen', trl: null },
+
+  { id:'t47', sec:10, name:'Pflege oder Betreuung von Angehörigen in Deutschland', type:'dec',
+    trigger: s => s.f1.includes('angehoerige') || s.f17 === 'ja',
+    q: 'Hast du das Thema „Pflege oder Betreuung von Angehörigen" für dich bereits geklärt?',
+    decName: 'Pflege oder Betreuung von Angehörigen in Deutschland', trl: null },
+
+  { id:'t48', sec:10, name:'Erbschaft, Schenkung und Erbsteuer', type:'dec',
+    trigger: s => s.f16 === 'ja' || s.f16 === 'unklar',
+    q: 'Hast du das Thema „Erbschaft, Schenkung und Erbsteuer" für dich bereits geklärt?',
+    decName: 'Erbschaft, Schenkung und Erbsteuer', trl: null }
+];
+
+const SECTIONS = {
+  1: '1. Pässe, Ausweise und Dokumente',
+  2: '2. Zielland und Aufenthalt',
+  3: '3. Schule, Kinder und Familienleistungen',
+  4: '4. Versicherungsschutz',
+  5: '5. Wohnen, Hausstand und Abmeldung',
+  6: '6. Kraftfahrzeug',
+  7: '7. Verträge und Mitgliedschaften',
+  8: '8. Banken, Finanzen und Vermögen',
+  9: '9. Beruf, Selbstständigkeit und Steuern',
+  10:'10. Sonstige Lebensumstände'
+};
+
+// ============================================================
+// LOGIC
+// ============================================================
+function computeTriggered() {
+  return TOPICS.filter(t => t.trigger(S)).map(t => t.id);
+}
+
+function getTopicAnswer(tid) {
+  return S.p2[tid];
+}
+
+function buildResultItems() {
+  // Returns [{secId, topicName, todos:[], checklistLabels:[], trlAngebot}]
+  const items = [];
+  for (const tid of p2Topics) {
+    const topic = TOPICS.find(t => t.id === tid);
+    const ans = S.p2[tid];
+    if (!ans) continue;
+
+    const todos = [];
+    const checkItems = [];
+    let trlText = topic.trl || null;
+
+    if (topic.type === 'dec') {
+      if (ans === 'nein') {
+        const name = topic.decName || topic.name;
+        todos.push(`Thema „${name}" steht noch aus → Beratungsthema.`);
+        checkItems.push(`Beratungsthema: ${name}`);
+      }
+    } else {
+      const selected = Array.isArray(ans) ? ans : [ans];
+      for (const v of selected) {
+        const opt = topic.opts.find(o => o.v === v);
+        if (!opt) continue;
+        if (!opt.todo) continue;
+        if (opt.todo === 'BERATUNGSTHEMA') {
+          todos.push(`Thema „${topic.name}" steht noch aus → Beratungsthema.`);
+          checkItems.push(`Beratungsthema: ${topic.name}`);
+        } else {
+          todos.push(opt.todo);
+          if (opt.cl) checkItems.push(opt.cl);
+          // per-option TRL hint
+          if (opt.trlInline && !trlText) trlText = opt.trlInline;
+        }
+      }
+    }
+
+    if (todos.length > 0) {
+      items.push({ secId: topic.sec, topicName: topic.name, todos, checkItems, trlText });
+    }
+  }
+  return items;
+}
+
+function generateDocText() {
+  const items = buildResultItems();
+  const vorname = S.vorname;
+
+  // Summary line
+  const f1Label = { solo:'Solo', paar:'Paar', familie:'Familie', angehoerige:'Mit Angehörigen' };
+  const f3Label = { unter6m:'unter 6 Monate', sechs12m:'6–12 Monate', laenger1j:'länger als 1 Jahr', dauerhaft:'dauerhaft', offen:'noch offen' };
+  const f4Label = { fest:'Festes Zielland', mehrere:'Mehrere im Blick', bewegung:'Unterwegs bleiben', offen:'Noch offen' };
+  const wer = S.f1.map(v => f1Label[v] || v).join(', ') || '–';
+  const dauer = f3Label[S.f3] || '–';
+  const ziel = f4Label[S.f4] || '–';
+
+  let doc = `# Auswander-Check – Dein persönliches Ergebnis
+## Tabula Rasa Life | Lebenslang Frei
+
+**Hallo ${vorname},**
+
+vielen Dank für die Beantwortung der Fragen. Hier ist dein individuelles Ergebnis – dein persönlicher Fahrplan für unser Beratungsgespräch.
+
+---
+
+**Wer:** ${wer} | **Zeitplan:** ${dauer} | **Zielland:** ${ziel}
+
+---
+
+`;
+
+  // Group by section
+  const bySec = {};
+  for (const item of items) {
+    if (!bySec[item.secId]) bySec[item.secId] = [];
+    bySec[item.secId].push(item);
+  }
+
+  for (const secId of Object.keys(bySec).sort((a,b)=>+a-+b)) {
+    doc += `## ${SECTIONS[secId]}\n\n`;
+    for (const item of bySec[secId]) {
+      doc += `**${item.topicName}**\n`;
+      for (const todo of item.todos) {
+        doc += `${todo}\n`;
+      }
+      if (item.trlText) {
+        doc += `\n> 🟠 **TRL-Angebot:** ${item.trlText}\n`;
+      }
+      doc += '\n';
+    }
+    doc += '---\n\n';
+  }
+
+  // Checklist – kompakt für eine Gamma-Karte
+  const allChecks = items.flatMap(i => i.checkItems);
+  if (allChecks.length > 0) {
+    doc += '## Deine Checkliste – alles auf einen Blick\n\n';
+    doc += '_Hak einfach ab, was du schon erledigt hast. Diese Liste passt komplett auf eine Karte – keine Aufteilung nötig._\n\n';
+    for (const cl of allChecks) {
+      doc += `- [ ] ${cl}\n`;
+    }
+    doc += '\n---\n\n';
+  }
+
+  doc += `## Dein nächster Schritt
+
+Wir freuen uns auf das Gespräch mit dir. Bring dieses Dokument gern zu deinem Termin mit – ausgedruckt oder auf dem Handy.
+
+**[Hier geht es zu deinem Beratungstermin](${CFG.calendly})**
+
+**Kirstin und Martin**
+Tabula Rasa Life – Lebenslang Frei
+tabula-rasa.life`;
+
+  return doc;
+}
+
+// ============================================================
+// WEBHOOK (Make / Zapier)
+// ============================================================
+async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function sendToWebhook() {
+  if (!CFG.webhookUrl) throw new Error('Kein Webhook eingerichtet. Bitte beratung@tabula-rasa.life kontaktieren.');
+
+  const text = generateDocText();
+  // Wichtig: Content-Type 'text/plain' verwenden, damit Browser KEIN CORS-Preflight schickt.
+  // Zapier parst den Body trotzdem als JSON. (Alternative: 'application/x-www-form-urlencoded')
+  const res = await fetch(CFG.webhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+    body: JSON.stringify({
+      vorname:       S.vorname,
+      nachname:      S.nachname,
+      email:         S.email,
+      trl_email:     CFG.trlEmail,
+      gamma_theme:   CFG.gammaThemeId,
+      document_text: text
+    })
+  });
+  if (!res.ok) throw new Error(`Webhook Fehler ${res.status}`);
+}
+
+// ============================================================
+// PERSISTENCE
+// ============================================================
+function saveProgress() {
+  if (!S.email) return;
+  localStorage.setItem(`ac-${S.email}`, JSON.stringify({ S, p1Step, p2Topics, p2Step, screen }));
+}
+
+function loadProgress(email) {
+  try {
+    const raw = localStorage.getItem(`ac-${email}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+function clearProgress() {
+  if (S.email) localStorage.removeItem(`ac-${S.email}`);
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+const app = document.getElementById('app');
+
+function render() {
+  if (screen === 'intro')       return renderIntro();
+  if (screen === 'phase1')      return renderPhase1();
+  if (screen === 'transition')  return renderTransition();
+  if (screen === 'phase2')      return renderPhase2();
+  if (screen === 'submitting')  return renderSubmitting();
+  if (screen === 'result')      return renderResult();
+  if (screen === 'error')       return renderError();
+}
+
+function header(subtitle) {
+  return `<div class="hdr">
+    <div class="hdr-brand">Tabula Rasa Life · Lebenslang Frei</div>
+    <h1>Auswander-Check</h1>
+    ${subtitle ? `<div class="hdr-sub">${subtitle}</div>` : ''}
+  </div>`;
+}
+
+function progressBar(pct, label, stepInfo) {
+  return `<div class="progress-wrap">
+    <div class="progress-info"><span>${label}</span><span>${stepInfo}</span></div>
+    <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+  </div>`;
+}
+
+// --- INTRO ---
+function renderIntro() {
+  app.innerHTML = header('Dein persönlicher Fahrplan für die Beratung') +
+    `<div class="body">
+      <div class="phase-label">Schritt 1 von 3 – Deine Angaben</div>
+      <p class="question">Bevor wir loslegen – wer bist du?</p>
+      <p class="question-hint">Deine Angaben werden benötigt, um dein persönliches Ergebnis-Dokument zu erstellen und dir zuzusenden.</p>
+      <div id="resume-slot"></div>
+      <div class="field-row">
+        <div class="field"><label>Vorname</label><input id="vorname" type="text" placeholder="z.B. Christina" value="${S.vorname}"></div>
+        <div class="field"><label>Nachname</label><input id="nachname" type="text" placeholder="z.B. Müller" value="${S.nachname}"></div>
+      </div>
+      <div class="field"><label>E-Mail-Adresse</label><input id="email" type="email" placeholder="deine@email.de" value="${S.email}"></div>
+      <div class="nav">
+        <button class="btn btn-primary" id="intro-next">Auswander-Check starten →</button>
+      </div>
+    </div>`;
+
+  const emailInput = document.getElementById('email');
+  emailInput.addEventListener('blur', () => {
+    const email = emailInput.value.trim().toLowerCase();
+    if (!email) return;
+    const saved = loadProgress(email);
+    const slot = document.getElementById('resume-slot');
+    if (saved && saved.screen !== 'result') {
+      slot.innerHTML = `<div class="resume-banner">
+        <p>Wir haben einen gespeicherten Fortschritt für diese E-Mail gefunden.</p>
+        <button class="btn-resume" id="do-resume">Fortsetzen</button>
+      </div>`;
+      document.getElementById('do-resume').onclick = () => {
+        Object.assign(S, saved.S);
+        p1Step = saved.p1Step; p2Topics = saved.p2Topics;
+        p2Step = saved.p2Step; screen = saved.screen;
+        render();
+      };
+    } else {
+      slot.innerHTML = '';
+    }
+  });
+
+  document.getElementById('intro-next').onclick = () => {
+    const v = document.getElementById('vorname').value.trim();
+    const n = document.getElementById('nachname').value.trim();
+    const e = document.getElementById('email').value.trim().toLowerCase();
+    if (!v || !n || !e || !e.includes('@')) {
+      alert('Bitte Vorname, Nachname und gültige E-Mail-Adresse eingeben.');
+      return;
+    }
+    S.vorname = v; S.nachname = n; S.email = e;
+    screen = 'phase1'; p1Step = 0;
+    saveProgress(); render();
+  };
+}
+
+// --- PHASE 1 ---
+function renderPhase1() {
+  const q = P1[p1Step];
+  const val = S[q.id];
+  const pct = Math.round(((p1Step) / 17) * 50); // phase 1 = 0-50%
+
+  app.innerHTML = header() +
+    progressBar(pct, 'Phase 1 – Deine Lebenssituation', `Frage ${p1Step+1} von 17`) +
+    `<div class="body">
+      <div class="phase-label">Phase 1 – Deine Lebenssituation</div>
+      <p class="question">${q.q.replace(/\n/g,'<br>')}</p>
+      ${q.hint ? `<p class="question-hint">${q.hint}</p>` : ''}
+      <div class="options" id="opts">
+        ${q.opts.map(o => {
+          const sel = q.type==='multi' ? (val||[]).includes(o.v) : val===o.v;
+          return `<div class="opt ${q.type==='multi'?'multi':''} ${sel?'selected':''}" data-v="${o.v}">${
+            q.type==='multi'
+              ? `<span class="opt-dot"></span><span>${o.l}</span>`
+              : `<span class="opt-dot"></span><span>${o.l}</span>`
+          }</div>`;
+        }).join('')}
+      </div>
+      <div class="nav">
+        ${p1Step > 0 ? '<button class="btn btn-back" id="back">← Zurück</button>' : ''}
+        ${q.type==='multi' ? '<button class="btn btn-primary" id="next" disabled>Weiter →</button>' : ''}
+      </div>
+    </div>`;
+
+  // Option click
+  document.getElementById('opts').addEventListener('click', e => {
+    const el = e.target.closest('.opt');
+    if (!el) return;
+    const v = el.dataset.v;
+    if (q.type === 'multi') {
+      S[q.id] = S[q.id] || [];
+      const idx = S[q.id].indexOf(v);
+      if (idx >= 0) S[q.id].splice(idx, 1); else S[q.id].push(v);
+      document.querySelectorAll('.opt').forEach(o => {
+        o.classList.toggle('selected', S[q.id].includes(o.dataset.v));
+      });
+      const btn = document.getElementById('next');
+      if (btn) btn.disabled = S[q.id].length === 0;
+    } else {
+      S[q.id] = v;
+      saveProgress();
+      setTimeout(advanceP1, 180);
+    }
+  });
+
+  const nextBtn = document.getElementById('next');
+  if (nextBtn) {
+    nextBtn.disabled = !(S[q.id] && S[q.id].length > 0);
+    nextBtn.onclick = () => { saveProgress(); advanceP1(); };
+  }
+
+  const backBtn = document.getElementById('back');
+  if (backBtn) backBtn.onclick = () => {
+    p1Step--; saveProgress(); render();
+  };
+}
+
+function advanceP1() {
+  p1Step++;
+  if (p1Step >= 17) {
+    p2Topics = computeTriggered();
+    p2Step = 0;
+    screen = 'transition';
+  }
+  saveProgress(); render();
+}
+
+// --- TRANSITION ---
+function renderTransition() {
+  app.innerHTML = header() +
+    progressBar(50, 'Phase 2 – Themen-Check', `${p2Topics.length} Themen ermittelt`) +
+    `<div class="body">
+      <div class="phase-label">Phase 2 – Themen-Check</div>
+      <div class="transition-box">
+        <h2>Super, ${S.vorname}! Deine Lebenssituation ist aufgenommen.</h2>
+        <p>Basierend auf deinen Angaben haben wir die Themen ermittelt, die für dich relevant sind. Zu jedem Thema stellen wir dir eine konkrete Frage.</p>
+        <div class="topic-count">
+          <span>●</span> ${p2Topics.length} relevante Themen für dich
+        </div>
+      </div>
+      <p style="font-size:.83rem;color:#777;font-weight:500;line-height:1.6">
+        Deine Antworten bilden die Grundlage für dein persönliches Ergebnis-Dokument, das du nach dem Check per E-Mail erhältst.
+      </p>
+      <div class="nav">
+        <button class="btn btn-back" id="back">← Zurück</button>
+        <button class="btn btn-primary" id="next">Themen-Check starten →</button>
+      </div>
+    </div>`;
+  document.getElementById('back').onclick = () => { screen='phase1'; p1Step=16; render(); };
+  document.getElementById('next').onclick  = () => { screen='phase2'; p2Step=0; saveProgress(); render(); };
+}
+
+// --- PHASE 2 ---
+function renderPhase2() {
+  const tid = p2Topics[p2Step];
+  const topic = TOPICS.find(t => t.id === tid);
+  const pct = Math.round(50 + (p2Step / p2Topics.length) * 45);
+
+  let optsHtml = '';
+  let isDec = topic.type === 'dec';
+  const opts = isDec
+    ? [{v:'ja',l:'Ja, ich habe mich damit bereits befasst.'},{v:'nein',l:'Nein, das steht noch aus.'}]
+    : topic.opts;
+  const isMul = !isDec && topic.sel === 'multi';
+  const cur = S.p2[tid];
+
+  optsHtml = opts.map(o => {
+    const sel = isMul ? (Array.isArray(cur) && cur.includes(o.v)) : cur === o.v;
+    return `<div class="opt ${isMul?'multi':''} ${sel?'selected':''}" data-v="${o.v}">
+      <span class="opt-dot"></span><span>${o.l}</span>
+    </div>`;
+  }).join('');
+
+  app.innerHTML = header() +
+    progressBar(pct, 'Phase 2 – Themen-Check', `Thema ${p2Step+1} von ${p2Topics.length}`) +
+    `<div class="body">
+      <div class="phase-label">${topic.type==='dec'?'Entscheidungsthema':'Thema'} · ${SECTIONS[topic.sec]}</div>
+      <p class="question">${topic.q}</p>
+      <div class="options" id="opts">${optsHtml}</div>
+      <div class="nav">
+        <button class="btn btn-back" id="back">← Zurück</button>
+        ${isMul ? '<button class="btn btn-primary" id="next" disabled>Weiter →</button>' : ''}
+      </div>
+    </div>`;
+
+  document.getElementById('opts').addEventListener('click', e => {
+    const el = e.target.closest('.opt');
+    if (!el) return;
+    const v = el.dataset.v;
+    if (isMul) {
+      S.p2[tid] = S.p2[tid] || [];
+      const idx = S.p2[tid].indexOf(v);
+      if (idx >= 0) S.p2[tid].splice(idx, 1); else S.p2[tid].push(v);
+      document.querySelectorAll('.opt').forEach(o => {
+        o.classList.toggle('selected', S.p2[tid].includes(o.dataset.v));
+      });
+      const btn = document.getElementById('next');
+      if (btn) btn.disabled = S.p2[tid].length === 0;
+    } else {
+      S.p2[tid] = v;
+      saveProgress();
+      setTimeout(advanceP2, 180);
+    }
+  });
+
+  const nextBtn = document.getElementById('next');
+  if (nextBtn) {
+    nextBtn.disabled = !(S.p2[tid] && S.p2[tid].length > 0);
+    nextBtn.onclick = () => { saveProgress(); advanceP2(); };
+  }
+
+  document.getElementById('back').onclick = () => {
+    if (p2Step > 0) { p2Step--; render(); }
+    else { screen = 'transition'; render(); }
+  };
+}
+
+function advanceP2() {
+  p2Step++;
+  if (p2Step >= p2Topics.length) {
+    screen = 'submitting';
+    statusStep = 0;
+    render();
+    startSubmit();
+  } else {
+    render();
+  }
+}
+
+// --- SUBMITTING ---
+function renderSubmitting() {
+  const steps = ['Antworten werden verarbeitet …', 'Dein persönliches Dokument wird erstellt …', 'E-Mail wird versendet …'];
+  app.innerHTML = header() +
+    progressBar(97, 'Dein Ergebnis', 'Wird erstellt …') +
+    `<div class="body">
+      <div class="submitting-wrap">
+        <div class="spinner"></div>
+        <h2>Gleich fertig, ${S.vorname}!</h2>
+        <p>Wir erstellen gerade dein persönliches Auswander-Check-Ergebnis.</p>
+        <div class="status-steps">
+          ${steps.map((s,i) => `<div class="status-step ${i<statusStep?'done':i===statusStep?'active':''}" id="ss${i}">
+            <span class="dot"></span><span>${s}</span>
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+function updateStatusStep(step) {
+  statusStep = step;
+  document.querySelectorAll('.status-step').forEach((el,i) => {
+    el.className = 'status-step ' + (i < step ? 'done' : i === step ? 'active' : '');
+  });
+}
+
+async function startSubmit() {
+  try {
+    updateStatusStep(0);
+    await sleep(600);
+    updateStatusStep(1);
+    await sleep(400);
+    updateStatusStep(2);
+    await sendToWebhook();
+    clearProgress();
+    screen = 'result';
+    render();
+  } catch(err) {
+    errorMsg = err.message;
+    screen = 'error';
+    render();
+  }
+}
+
+// --- RESULT ---
+function renderResult() {
+  app.innerHTML = header() +
+    progressBar(100, 'Fertig!', '✓') +
+    `<div class="body">
+      <div class="result-icon">🎉</div>
+      <div class="result-box">
+        <h2>Geschafft, ${S.vorname}!</h2>
+        <p>Dein persönlicher Auswander-Check ist fertig. Du bekommst gleich eine E-Mail mit deinem Ergebnis-Dokument.</p>
+      </div>
+      <div class="gamma-link-wrap">
+        <div class="email-confirm">
+          <span>✓</span>
+          <span>Dein Ergebnis-Dokument wird an <strong>${S.email}</strong> geschickt</span>
+        </div>
+        <div class="email-confirm" style="margin-top:8px">
+          <span>✓</span>
+          <span>Wir haben deine Antworten erhalten und bereiten uns auf euren Termin vor</span>
+        </div>
+      </div>
+      <a class="btn-calendly" href="${CFG.calendly}" target="_blank" rel="noopener">
+        Beratungstermin buchen →
+      </a>
+      <p class="calendly-sub">Bring dein Ergebnis-Dokument zum Termin mit – wir gehen alles gemeinsam durch.</p>
+    </div>`;
+}
+
+// --- ERROR ---
+function renderError() {
+  app.innerHTML = header() +
+    `<div class="body">
+      <div class="error-box">
+        <h3>Es gab ein technisches Problem</h3>
+        <p>${errorMsg}</p>
+      </div>
+      <p style="font-size:.83rem;color:#555;margin-bottom:20px;font-weight:500;line-height:1.6">
+        Bitte schreibe uns kurz an <strong>beratung@tabula-rasa.life</strong> – wir senden dir dein Ergebnis manuell zu.
+      </p>
+      <div class="nav">
+        <button class="btn btn-back" id="retry">← Zurück zum Check</button>
+        <a class="btn btn-primary" style="text-align:center;text-decoration:none" href="${CFG.calendly}" target="_blank">Termin buchen</a>
+      </div>
+    </div>`;
+  document.getElementById('retry').onclick = () => {
+    screen = 'phase2'; render();
+  };
+}
+
+// ============================================================
+// INIT
+// ============================================================
+render();
+</script>
+</body>
+</html>

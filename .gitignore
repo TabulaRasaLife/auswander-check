@@ -1,0 +1,30 @@
+# Claude Code Settings (enthält API-Keys und Passwörter — NIEMALS committen!)
+.claude/
+.claude-code/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs & Temp
+*.log
+*.tmp
+*.bak
+
+# Environment Files (für später, falls API-Keys via ENV kommen)
+.env
+.env.local
+.env.*.local
+
+# Build / Dependencies (für später)
+node_modules/
+dist/
+build/
